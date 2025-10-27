@@ -1,8 +1,9 @@
 /* See LICENSE file for copyright and license details. */
 
+#include <X11/XF86keysym.h>
 /* Helper macros for spawning commands */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
-#define CMD(...)   { .v = (const char*[]){ __VA_ARGS__, NULL } }
+#define SPAWN(...)   { .v = (const char*[]){ __VA_ARGS__, NULL } }
 
 /* appearance */
 #if ROUNDED_CORNERS_PATCH
@@ -28,11 +29,11 @@ static const int scalepreview            = 4;        /* Tag preview scaling */
 static int nomodbuttons                  = 1;   /* allow client mouse button bindings that have no modifier */
 #endif // NO_MOD_BUTTONS_PATCH
 #if VANITYGAPS_PATCH
-static const unsigned int gappih         = 20;  /* horiz inner gap between windows */
-static const unsigned int gappiv         = 10;  /* vert inner gap between windows */
-static const unsigned int gappoh         = 10;  /* horiz outer gap between windows and screen edge */
-static const unsigned int gappov         = 30;  /* vert outer gap between windows and screen edge */
-static const int smartgaps_fact          = 1;   /* gap factor when there is only one client; 0 = no gaps, 3 = 3x outer gaps */
+static const unsigned int gappih         = 4;  /* horiz inner gap between windows */
+static const unsigned int gappiv         = 4;  /* vert inner gap between windows */
+static const unsigned int gappoh         = 4;  /* horiz outer gap between windows and screen edge */
+static const unsigned int gappov         = 4;  /* vert outer gap between windows and screen edge */
+static const int smartgaps_fact          = 0;   /* gap factor when there is only one client; 0 = no gaps, 3 = 3x outer gaps */
 #endif // VANITYGAPS_PATCH
 #if AUTOSTART_PATCH
 static const char autostartblocksh[]     = "autostart_blocking.sh";
@@ -810,7 +811,7 @@ static const char *xkb_layouts[]  = {
 #endif // XKB_PATCH
 
 /* key definitions */
-#define MODKEY Mod1Mask
+#define MODKEY Mod4Mask
 #if COMBO_PATCH && SWAPTAGS_PATCH && TAGOTHERMONITOR_PATCH
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      comboview,      {.ui = 1 << TAG} }, \
@@ -1041,11 +1042,66 @@ ResourcePref resources[] = {
 
 static const Key keys[] = {
 	/* modifier                     key            function                argument */
+    // ===== BRIGHTNESS AND AUDIO CONTROLS =====
+    {0,             XF86XK_AudioLowerVolume,    spawn, SPAWN("defapps-artix", "--vdown")},
+    {0,             XF86XK_AudioMute,           spawn, SPAWN("defapps-artix", "--vtoggle")},
+    {0,             XF86XK_AudioRaiseVolume,    spawn, SPAWN("defapps-artix", "--vup")},
+    {0,             XF86XK_MonBrightnessUp,     spawn, SPAWN("defapps-artix", "--brup")},
+    {0,             XF86XK_MonBrightnessDown,   spawn, SPAWN("defapps-artix", "--brdown")},
+
+    // Alternative volume/brightness shortcuts
+    {MODKEY|ShiftMask,                  XK_v,       spawn, SPAWN("defapps-artix", "--vup")},
+    {MODKEY,                            XK_v,       spawn, SPAWN("defapps-artix", "--vdown")},
+    {MODKEY|ShiftMask,                  XK_m,       spawn, SPAWN("defapps-artix", "--vtoggle")},
+
+    // ===== TERMINAL SHORTCUTS =====
+    {MODKEY,                            XK_Return,  spawn, SPAWN("defapps-artix", "-t1")},
+    {MODKEY|ShiftMask,                  XK_Return,  spawn, SPAWN("defapps-artix", "-t2")},
+    {Mod1Mask|ShiftMask,                XK_t,       spawn, SPAWN("defapps-artix", "--runt")},
+
+    // ===== BROWSERS =====
+    {Mod1Mask|ShiftMask,                  XK_w,       spawn, SPAWN("defapps-artix", "--runb")},
+
+    // ===== EDITORS =====
+    {Mod1Mask|ShiftMask,                  XK_e,       spawn, SPAWN("defapps-artix", "--rune")},
+
+    // ===== CONTROL PANELS =====
+    {Mod1Mask|ShiftMask,                            XK_c,       spawn, SPAWN("defapps-artix", "--runc")},
+
+    // ===== ROFI MENUS =====
+    {Mod1Mask|ShiftMask,                XK_2,       spawn, SPAWN("defapps-artix", "--rc")},
+    {Mod1Mask|ShiftMask,                  XK_a,       spawn, SPAWN("defapps-artix", "--rw")},
+    {Mod1Mask,                          XK_F2,      spawn, SPAWN("defapps-artix", "--rr")},
+
+    // ===== CLIPBOARD MANAGER =====
+    {Mod1Mask|ControlMask,              XK_h,       spawn, SPAWN("defapps-artix", "--clipboard")},
+
+    // ===== NETWORK MANAGER =====
+    {Mod1Mask|ShiftMask,                XK_n,       spawn, SPAWN("defapps-artix", "--nmd")},
+
+    // ===== HOTKEYS HELP =====
+    {Mod1Mask|ShiftMask,                XK_slash,   spawn, SPAWN("defapps-artix", "--hotkeys")},
+
+    // ===== SCREEN LOCKER =====
+    {Mod1Mask|ShiftMask,                XK_l,       spawn, SPAWN("defapps-artix", "--sl")},
+
+    // ===== SCREENSHOTS =====
+    {0,                                 XK_Print,   spawn, SPAWN("defapps-artix", "--fss")},
+    {Mod1Mask,                          XK_Print,   spawn, SPAWN("defapps-artix", "--ass")},
+
+    // ===== WALLPAPER =====
+    {Mod1Mask|ShiftMask,                XK_r,       spawn, SPAWN("defapps-artix", "--rwal")},
+    
+    // ===== WALLPAPER =====
+    {Mod1Mask|ShiftMask,                XK_s,       spawn, SPAWN("defapps-artix", "--spt")},
+
+    // ===== POWER MENU =====
+    {Mod1Mask|ShiftMask,                  XK_x,       spawn, SPAWN("defapps-artix", "--powermenu")},
 	#if KEYMODES_PATCH
 	{ MODKEY,                       XK_Escape,     setkeymode,             {.ui = COMMANDMODE} },
 	#endif // KEYMODES_PATCH
 	{ MODKEY,                       XK_p,          spawn,                  {.v = dmenucmd } },
-	{ MODKEY|ShiftMask,             XK_Return,     spawn,                  {.v = termcmd } },
+	// { MODKEY|ShiftMask,             XK_Return,     spawn,                  {.v = termcmd } },
 	#if RIODRAW_PATCH
 	{ MODKEY|ControlMask,           XK_p,          riospawnsync,           {.v = dmenucmd } },
 	{ MODKEY|ControlMask,           XK_Return,     riospawn,               {.v = termcmd } },
@@ -1118,14 +1174,14 @@ static const Key keys[] = {
 	{ MODKEY|ControlMask|ShiftMask, XK_r,          aspectresize,           {.i = -24} },
 	#endif // ASPECTRESIZE_PATCH
 	#if MOVERESIZE_PATCH
-	{ MODKEY|Mod4Mask,              XK_Down,       moveresize,             {.v = "0x 25y 0w 0h" } },
-	{ MODKEY|Mod4Mask,              XK_Up,         moveresize,             {.v = "0x -25y 0w 0h" } },
-	{ MODKEY|Mod4Mask,              XK_Right,      moveresize,             {.v = "25x 0y 0w 0h" } },
-	{ MODKEY|Mod4Mask,              XK_Left,       moveresize,             {.v = "-25x 0y 0w 0h" } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_Down,       moveresize,             {.v = "0x 0y 0w 25h" } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_Up,         moveresize,             {.v = "0x 0y 0w -25h" } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_Right,      moveresize,             {.v = "0x 0y 25w 0h" } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_Left,       moveresize,             {.v = "0x 0y -25w 0h" } },
+	{ MODKEY,                       XK_Down,       moveresize,             {.v = "0x 25y 0w 0h" } },
+	{ MODKEY,                       XK_Up,         moveresize,             {.v = "0x -25y 0w 0h" } },
+	{ MODKEY,                       XK_Right,      moveresize,             {.v = "25x 0y 0w 0h" } },
+	{ MODKEY,                       XK_Left,       moveresize,             {.v = "-25x 0y 0w 0h" } },
+	{ MODKEY|ShiftMask,             XK_Down,       moveresize,             {.v = "0x 0y 0w 25h" } },
+	{ MODKEY|ShiftMask,             XK_Up,         moveresize,             {.v = "0x 0y 0w -25h" } },
+	{ MODKEY|ShiftMask,             XK_Right,      moveresize,             {.v = "0x 0y 25w 0h" } },
+	{ MODKEY|ShiftMask,             XK_Left,       moveresize,             {.v = "0x 0y -25w 0h" } },
 	#endif // MOVERESIZE_PATCH
 	#if MOVESTACK_PATCH
 	{ MODKEY|ShiftMask,             XK_j,          movestack,              {.i = +1 } },
@@ -1146,24 +1202,24 @@ static const Key keys[] = {
 	#if INSETS_PATCH
 	{ MODKEY|ShiftMask|ControlMask, XK_a,          updateinset,            {.v = &default_inset } },
 	#endif // INSETS_PATCH
-	{ MODKEY,                       XK_Return,     zoom,                   {0} },
+	{ MODKEY|Mod1Mask,              XK_z,          zoom,                   {0} },
 	#if VANITYGAPS_PATCH
-	{ MODKEY|Mod4Mask,              XK_u,          incrgaps,               {.i = +1 } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_u,          incrgaps,               {.i = -1 } },
-	{ MODKEY|Mod4Mask,              XK_i,          incrigaps,              {.i = +1 } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_i,          incrigaps,              {.i = -1 } },
-	{ MODKEY|Mod4Mask,              XK_o,          incrogaps,              {.i = +1 } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_o,          incrogaps,              {.i = -1 } },
-	{ MODKEY|Mod4Mask,              XK_6,          incrihgaps,             {.i = +1 } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_6,          incrihgaps,             {.i = -1 } },
-	{ MODKEY|Mod4Mask,              XK_7,          incrivgaps,             {.i = +1 } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_7,          incrivgaps,             {.i = -1 } },
-	{ MODKEY|Mod4Mask,              XK_8,          incrohgaps,             {.i = +1 } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_8,          incrohgaps,             {.i = -1 } },
-	{ MODKEY|Mod4Mask,              XK_9,          incrovgaps,             {.i = +1 } },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_9,          incrovgaps,             {.i = -1 } },
-	{ MODKEY|Mod4Mask,              XK_0,          togglegaps,             {0} },
-	{ MODKEY|Mod4Mask|ShiftMask,    XK_0,          defaultgaps,            {0} },
+	{ MODKEY|Mod1Mask,              XK_u,          incrgaps,               {.i = +1 } },
+	{ MODKEY|Mod1Mask|ShiftMask,    XK_u,          incrgaps,               {.i = -1 } },
+	{ MODKEY|Mod1Mask,              XK_i,          incrigaps,              {.i = +1 } },
+	{ MODKEY|Mod1Mask|ShiftMask,    XK_i,          incrigaps,              {.i = -1 } },
+	{ MODKEY|Mod1Mask,              XK_o,          incrogaps,              {.i = +1 } },
+	{ MODKEY|Mod1Mask|ShiftMask,    XK_o,          incrogaps,              {.i = -1 } },
+	{ MODKEY|Mod1Mask,              XK_6,          incrihgaps,             {.i = +1 } },
+	{ MODKEY|Mod1Mask|ShiftMask,    XK_6,          incrihgaps,             {.i = -1 } },
+	{ MODKEY|Mod1Mask,              XK_7,          incrivgaps,             {.i = +1 } },
+	{ MODKEY|Mod1Mask|ShiftMask,    XK_7,          incrivgaps,             {.i = -1 } },
+	{ MODKEY|Mod1Mask,              XK_8,          incrohgaps,             {.i = +1 } },
+	{ MODKEY|Mod1Mask|ShiftMask,    XK_8,          incrohgaps,             {.i = -1 } },
+	{ MODKEY|Mod1Mask,              XK_9,          incrovgaps,             {.i = +1 } },
+	{ MODKEY|Mod1Mask|ShiftMask,    XK_9,          incrovgaps,             {.i = -1 } },
+	{ MODKEY|Mod1Mask,              XK_0,          togglegaps,             {0} },
+	{ MODKEY|Mod1Mask|ShiftMask,    XK_0,          defaultgaps,            {0} },
 	#endif // VANITYGAPS_PATCH
 	#if ALT_TAB_PATCH
 	{ Mod1Mask,                     XK_Tab,        alttabstart,            {0} },
